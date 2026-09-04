@@ -1,4 +1,4 @@
-/* $OpenBSD$ */
+/* $OpenBSD: sort.c,v 1.10 2026/08/25 07:23:30 nicm Exp $ */
 
 /*
  * Copyright (c) 2026 Dane Jensen <dhcjensen@gmail.com>
@@ -26,13 +26,13 @@
 static struct sort_criteria *sort_criteria;
 
 static void
-sort_qsort(void *l, u_int len, u_int size, int (*cmp)(const void *, const void *),
-    struct sort_criteria *sort_crit)
+sort_qsort(void *l, u_int len, u_int size, int (*cmp)(const void *,
+    const void *), struct sort_criteria *sort_crit)
 {
 	u_int	 i;
 	void	*tmp, **ll;
 
-	if (sort_crit->order == SORT_END)
+	if (len < 2 || sort_crit->order == SORT_END)
 		return;
 
 	if (sort_crit->order == SORT_ORDER) {
@@ -65,7 +65,12 @@ sort_buffer_cmp(const void *a0, const void *b0)
 		result = strcmp(pa->name, pb->name);
 		break;
 	case SORT_CREATION:
-		result = pa->order - pb->order;
+		if (pa->order > pb->order)
+			result = -1;
+		else if (pa->order < pb->order)
+			result = 1;
+		else
+			result = 0;
 		break;
 	case SORT_SIZE:
 		result = pa->size - pb->size;
@@ -251,11 +256,11 @@ sort_winlink_cmp(const void *a0, const void *b0)
 		break;
 	case SORT_CREATION:
 		if (timercmp(&wa->creation_time, &wb->creation_time, >)) {
-			result = -1;
+			result = 1;
 			break;
 		}
 		if (timercmp(&wa->creation_time, &wb->creation_time, <)) {
-			result = 1;
+			result = -1;
 			break;
 		}
 		break;
